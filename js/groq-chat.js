@@ -1,16 +1,6 @@
 // Groq Chat Integration
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-
-// Check if config file exists and load API key from it
-let apiKey = '';
-try {
-    if (typeof CONFIG !== 'undefined' && CONFIG.GROQ_API_KEY) {
-        apiKey = CONFIG.GROQ_API_KEY;
-        console.log('API key loaded from config file');
-    }
-} catch (error) {
-    console.log('No config file detected, will prompt for API key');
-}
+const GROQ_API_URL = window.AppConfig ? window.AppConfig.groqApiUrl : 'https://api.groq.com/openai/v1/chat/completions';
+const DEFAULT_MODEL = window.AppConfig ? window.AppConfig.groqModel : 'llama3-8b-8192';
 
 // DOM Elements
 const chatMessages = document.getElementById('chatMessages');
@@ -27,18 +17,15 @@ let chatHistory = [
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Check for API key from config file first
-    if (apiKey) {
-        // If API key exists in config, store it and show chat
-        sessionStorage.setItem('groqApiKey', apiKey);
+    // Check for environment-provided key first (development only)
+    const envApiKey = window.AppConfig && window.AppConfig.groqApiKey;
+    
+    // Check for stored API key in session next
+    const storedApiKey = sessionStorage.getItem('groqApiKey') || envApiKey;
+    
+    if (storedApiKey) {
+        // If key exists, show chat interface
         showChatInterface();
-    } else {
-        // Otherwise, check for stored API key in session
-        const storedApiKey = sessionStorage.getItem('groqApiKey');
-        if (storedApiKey) {
-            // If key exists in session storage, show chat interface
-            showChatInterface();
-        }
     }
     
     // Add event listener for API key form
@@ -136,8 +123,8 @@ function hideLoadingIndicator() {
 
 // Function to send message to Groq API
 async function sendMessageToGroq(message) {
-    // Get API key from session storage
-    const apiKey = sessionStorage.getItem('groqApiKey');
+    // Get API key from session storage or environment
+    const apiKey = sessionStorage.getItem('groqApiKey') || (window.AppConfig && window.AppConfig.groqApiKey);
     
     if (!apiKey) {
         hideLoadingIndicator();
@@ -146,11 +133,6 @@ async function sendMessageToGroq(message) {
     }
     
     try {
-        // Use configuration from config if available
-        const model = (typeof CONFIG !== 'undefined' && CONFIG.GROQ_MODEL) ? CONFIG.GROQ_MODEL : 'llama3-8b-8192';
-        const maxTokens = (typeof CONFIG !== 'undefined' && CONFIG.MAX_TOKENS) ? CONFIG.MAX_TOKENS : 1024;
-        const temperature = (typeof CONFIG !== 'undefined' && CONFIG.TEMPERATURE) ? CONFIG.TEMPERATURE : 0.7;
-        
         const response = await fetch(GROQ_API_URL, {
             method: 'POST',
             headers: {
@@ -158,10 +140,10 @@ async function sendMessageToGroq(message) {
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: model,
+                model: DEFAULT_MODEL,
                 messages: chatHistory,
-                temperature: temperature,
-                max_tokens: maxTokens
+                temperature: 0.7,
+                max_tokens: 1024
             })
         });
         
