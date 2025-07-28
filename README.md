@@ -43,16 +43,31 @@ A responsive, modern personal portfolio website for martial arts instructor Umer
 
 The website features an AI assistant powered by Groq's API:
 
-- For security reasons, the chatbot uses a client-side approach where users need to provide their own Groq API key
-- Keys are only stored in the browser's session storage and are never saved on servers
-- The chatbot uses Llama3-8b-8192 model for responses
+- The chatbot uses Llama3-8b-8192 model by default
 - Conversation context is maintained throughout the chat session
+- API keys are handled securely
 
-### Setting up the Chatbot
+### Setting up the Chatbot (Choose one method)
 
-1. Sign up for an account at [Groq](https://console.groq.com)
-2. Create an API key in your Groq dashboard
-3. When using the chatbot on the website, enter your API key when prompted
+#### Method 1: Config File (Recommended for Development)
+
+1. Rename `js/config.sample.js` to `js/config.js` and add your Groq API key:
+```javascript
+const CONFIG = {
+    GROQ_API_KEY: "your-api-key-here",
+    GROQ_MODEL: "llama3-8b-8192",
+    MAX_TOKENS: 1024,
+    TEMPERATURE: 0.7
+};
+```
+2. The `js/config.js` file is already in `.gitignore` to prevent committing API keys to the repository
+
+#### Method 2: User Input (Recommended for Production)
+
+1. Deploy the website without including the config.js file
+2. Users will be prompted to enter their own Groq API key
+3. Keys are only stored in the browser's session storage and are never saved on servers
+4. Users need to sign up at [Groq](https://console.groq.com) and create their own API key
 
 ## Supabase Integration
 

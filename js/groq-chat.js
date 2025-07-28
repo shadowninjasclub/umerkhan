@@ -1,6 +1,17 @@
 // Groq Chat Integration
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
+// Check if config file exists and load API key from it
+let apiKey = '';
+try {
+    if (typeof CONFIG !== 'undefined' && CONFIG.GROQ_API_KEY) {
+        apiKey = CONFIG.GROQ_API_KEY;
+        console.log('API key loaded from config file');
+    }
+} catch (error) {
+    console.log('No config file detected, will prompt for API key');
+}
+
 // DOM Elements
 const chatMessages = document.getElementById('chatMessages');
 const userInput = document.getElementById('userInput');
@@ -16,11 +27,18 @@ let chatHistory = [
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Check for stored API key in session
-    const storedApiKey = sessionStorage.getItem('groqApiKey');
-    if (storedApiKey) {
-        // If key exists, show chat interface
+    // Check for API key from config file first
+    if (apiKey) {
+        // If API key exists in config, store it and show chat
+        sessionStorage.setItem('groqApiKey', apiKey);
         showChatInterface();
+    } else {
+        // Otherwise, check for stored API key in session
+        const storedApiKey = sessionStorage.getItem('groqApiKey');
+        if (storedApiKey) {
+            // If key exists in session storage, show chat interface
+            showChatInterface();
+        }
     }
     
     // Add event listener for API key form
@@ -128,6 +146,11 @@ async function sendMessageToGroq(message) {
     }
     
     try {
+        // Use configuration from config if available
+        const model = (typeof CONFIG !== 'undefined' && CONFIG.GROQ_MODEL) ? CONFIG.GROQ_MODEL : 'llama3-8b-8192';
+        const maxTokens = (typeof CONFIG !== 'undefined' && CONFIG.MAX_TOKENS) ? CONFIG.MAX_TOKENS : 1024;
+        const temperature = (typeof CONFIG !== 'undefined' && CONFIG.TEMPERATURE) ? CONFIG.TEMPERATURE : 0.7;
+        
         const response = await fetch(GROQ_API_URL, {
             method: 'POST',
             headers: {
@@ -135,10 +158,10 @@ async function sendMessageToGroq(message) {
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: 'llama3-8b-8192', // Using Llama 3 model
+                model: model,
                 messages: chatHistory,
-                temperature: 0.7,
-                max_tokens: 1024
+                temperature: temperature,
+                max_tokens: maxTokens
             })
         });
         
