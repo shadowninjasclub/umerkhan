@@ -1,11 +1,13 @@
 // Groq Chat Integration
-const GROQ_API_KEY = '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';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 // DOM Elements
 const chatMessages = document.getElementById('chatMessages');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
+const apiKeyInput = document.getElementById('apiKeyInput');
+const apiKeyForm = document.getElementById('apiKeyForm');
+const chatInterface = document.getElementById('chatInterface');
 
 // Chat history to maintain context
 let chatHistory = [
@@ -14,6 +16,27 @@ let chatHistory = [
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Check for stored API key in session
+    const storedApiKey = sessionStorage.getItem('groqApiKey');
+    if (storedApiKey) {
+        // If key exists, show chat interface
+        showChatInterface();
+    }
+    
+    // Add event listener for API key form
+    if (apiKeyForm) {
+        apiKeyForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const apiKey = apiKeyInput.value.trim();
+            if (apiKey) {
+                // Store key in session storage (not localStorage for security)
+                sessionStorage.setItem('groqApiKey', apiKey);
+                showChatInterface();
+                apiKeyInput.value = '';
+            }
+        });
+    }
+    
     // Add event listener for send button
     sendBtn.addEventListener('click', handleSendMessage);
     
@@ -24,6 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// Function to show chat interface and hide API key form
+function showChatInterface() {
+    if (apiKeyForm) apiKeyForm.style.display = 'none';
+    if (chatInterface) chatInterface.style.display = 'block';
+}
 
 // Function to handle sending messages
 function handleSendMessage() {
@@ -89,12 +118,21 @@ function hideLoadingIndicator() {
 
 // Function to send message to Groq API
 async function sendMessageToGroq(message) {
+    // Get API key from session storage
+    const apiKey = sessionStorage.getItem('groqApiKey');
+    
+    if (!apiKey) {
+        hideLoadingIndicator();
+        addMessageToChat('ai', 'API key not found. Please reload the page and enter your Groq API key.');
+        return;
+    }
+    
     try {
         const response = await fetch(GROQ_API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${GROQ_API_KEY}`
+                'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
                 model: 'llama3-8b-8192', // Using Llama 3 model
@@ -109,7 +147,7 @@ async function sendMessageToGroq(message) {
         if (data.error) {
             // Handle error
             hideLoadingIndicator();
-            addMessageToChat('ai', 'Sorry, I encountered an error. Please try again later.');
+            addMessageToChat('ai', 'Sorry, I encountered an error. Please check your API key or try again later.');
             console.error('Groq API Error:', data.error);
             return;
         }

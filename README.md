@@ -11,6 +11,7 @@ A responsive, modern personal portfolio website for martial arts instructor Umer
 - Interactive portfolio with filtering capabilities
 - Animated skill bars and timeline
 - Contact form with validation
+- AI Chatbot powered by Groq API
 - SEO optimized structure
 - Supabase integration for data storage
 
@@ -25,6 +26,7 @@ A responsive, modern personal portfolio website for martial arts instructor Umer
 - Services offered
 - Hobbies and interests
 - Contact section with form
+- AI Assistant chatbot page
 
 ## Technologies Used
 
@@ -34,7 +36,23 @@ A responsive, modern personal portfolio website for martial arts instructor Umer
 - Font Awesome icons
 - Google Fonts
 - Web3Forms API for contact form
+- Groq API for AI chatbot
 - Supabase for database functionality
+
+## AI Chatbot Integration
+
+The website features an AI assistant powered by Groq's API:
+
+- For security reasons, the chatbot uses a client-side approach where users need to provide their own Groq API key
+- Keys are only stored in the browser's session storage and are never saved on servers
+- The chatbot uses Llama3-8b-8192 model for responses
+- Conversation context is maintained throughout the chat session
+
+### Setting up the Chatbot
+
+1. Sign up for an account at [Groq](https://console.groq.com)
+2. Create an API key in your Groq dashboard
+3. When using the chatbot on the website, enter your API key when prompted
 
 ## Supabase Integration
 
@@ -76,4 +94,5 @@ This website uses Supabase for the following features:
 - Fonts: Google Fonts (Poppins, Cinzel)
 - Icons: Font Awesome
 - Form Processing: Web3Forms
-- Database: Supabase 
+- Database: Supabase
+- AI Assistant: Groq API 
