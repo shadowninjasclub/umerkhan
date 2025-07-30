@@ -1,62 +1,133 @@
 // Groq Chat Integration
-const GROQ_API_URL = window.AppConfig ? window.AppConfig.groqApiUrl : 'https://api.groq.com/openai/v1/chat/completions';
-const DEFAULT_MODEL = window.AppConfig ? window.AppConfig.groqModel : 'llama3-8b-8192';
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const DEFAULT_MODEL = 'llama3-8b-8192';
 
 // DOM Elements
 const chatMessages = document.getElementById('chatMessages');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
 const apiKeyInput = document.getElementById('apiKeyInput');
-const apiKeyForm = document.getElementById('apiKeyForm');
-const chatInterface = document.getElementById('chatInterface');
+const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+const apiKeyModal = document.getElementById('apiKeyModal');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const openApiKeyModalBtn = document.getElementById('openApiKeyModalBtn');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+const modelSelect = document.getElementById('modelSelect');
 
-// Chat history to maintain context
+// Chat history and API key storage
 let chatHistory = [
     { role: 'system', content: 'You are a friendly and knowledgeable AI assistant for Umer Khan, a martial arts instructor with expertise in Ninjutsu (Black Belt) and Judo (Blue Belt). Provide helpful, accurate information about martial arts, training techniques, and Umer\'s services. Be concise but friendly in your responses. If asked about scheduling or specific services, recommend contacting Umer directly through the contact form on the website.' }
 ];
 
-// Event Listeners
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    // Check for environment-provided key first (development only)
-    const envApiKey = window.AppConfig && window.AppConfig.groqApiKey;
-    
-    // Check for stored API key in session next
-    const storedApiKey = sessionStorage.getItem('groqApiKey') || envApiKey;
-    
-    if (storedApiKey) {
-        // If key exists, show chat interface
-        showChatInterface();
+    // Load API key from localStorage
+    const savedApiKey = localStorage.getItem('groqApiKey');
+    if (savedApiKey) {
+        apiKeyInput.value = savedApiKey;
+    } else {
+        // Show API key modal if no key is saved
+        showApiKeyModal();
     }
-    
-    // Add event listener for API key form
-    if (apiKeyForm) {
-        apiKeyForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const apiKey = apiKeyInput.value.trim();
-            if (apiKey) {
-                // Store key in session storage (not localStorage for security)
-                sessionStorage.setItem('groqApiKey', apiKey);
-                showChatInterface();
-                apiKeyInput.value = '';
-            }
-        });
-    }
-    
-    // Add event listener for send button
+
+    // Load saved chat history
+    loadChatHistory();
+
+    // Event listeners for chat
     sendBtn.addEventListener('click', handleSendMessage);
-    
-    // Add event listener for Enter key in input
     userInput.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
             handleSendMessage();
         }
     });
+
+    // Event listeners for API key management
+    saveApiKeyBtn.addEventListener('click', saveApiKey);
+    openApiKeyModalBtn.addEventListener('click', showApiKeyModal);
+    closeModalBtn.addEventListener('click', hideApiKeyModal);
+
+    // Clear history button
+    if (clearHistoryBtn) {
+        clearHistoryBtn.addEventListener('click', clearChatHistory);
+    }
+
+    // Check for API key on first load
+    checkApiKey();
 });
 
-// Function to show chat interface and hide API key form
-function showChatInterface() {
-    if (apiKeyForm) apiKeyForm.style.display = 'none';
-    if (chatInterface) chatInterface.style.display = 'block';
+// Function to check if API key exists
+function checkApiKey() {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+        addMessageToChat('ai', 'Please enter your Groq API key to start chatting. Click the "API Key" button in the top right to set it up.');
+        return false;
+    }
+    return true;
+}
+
+// Function to get API key
+function getApiKey() {
+    return localStorage.getItem('groqApiKey');
+}
+
+// Function to save API key
+function saveApiKey() {
+    const apiKey = apiKeyInput.value.trim();
+    if (apiKey) {
+        localStorage.setItem('groqApiKey', apiKey);
+        hideApiKeyModal();
+        addMessageToChat('ai', 'API key saved successfully! You can now chat with the AI assistant.');
+    } else {
+        alert('Please enter a valid API key');
+    }
+}
+
+// Function to show API key modal
+function showApiKeyModal() {
+    apiKeyModal.style.display = 'flex';
+}
+
+// Function to hide API key modal
+function hideApiKeyModal() {
+    apiKeyModal.style.display = 'none';
+}
+
+// Function to save chat history to localStorage
+function saveChatHistory() {
+    // Skip first system message when saving to localStorage
+    const historyToSave = chatHistory.slice(1);
+    localStorage.setItem('chatHistory', JSON.stringify(historyToSave));
+}
+
+// Function to load chat history from localStorage
+function loadChatHistory() {
+    const savedHistory = localStorage.getItem('chatHistory');
+    if (savedHistory) {
+        const parsedHistory = JSON.parse(savedHistory);
+        
+        // Add saved messages to UI and chat history (keeping the system message)
+        chatHistory = [chatHistory[0], ...parsedHistory];
+        
+        // Display messages in UI
+        parsedHistory.forEach(msg => {
+            addMessageToChat(msg.role, msg.content);
+        });
+    }
+}
+
+// Function to clear chat history
+function clearChatHistory() {
+    if (confirm('Are you sure you want to clear the chat history?')) {
+        // Clear localStorage
+        localStorage.removeItem('chatHistory');
+        
+        // Reset chat history (keep system message)
+        chatHistory = [chatHistory[0]];
+        
+        // Clear UI
+        chatMessages.innerHTML = '';
+        addMessageToChat('ai', 'Chat history has been cleared.');
+    }
 }
 
 // Function to handle sending messages
@@ -64,6 +135,12 @@ function handleSendMessage() {
     const message = userInput.value.trim();
     
     if (message === '') return;
+    
+    // Check if API key is set
+    if (!checkApiKey()) {
+        showApiKeyModal();
+        return;
+    }
     
     // Add user message to chat
     addMessageToChat('user', message);
@@ -73,6 +150,9 @@ function handleSendMessage() {
     
     // Add to chat history
     chatHistory.push({ role: 'user', content: message });
+    
+    // Save to localStorage
+    saveChatHistory();
     
     // Show loading indicator
     showLoadingIndicator();
@@ -121,18 +201,24 @@ function hideLoadingIndicator() {
     }
 }
 
+// Function to get selected model
+function getSelectedModel() {
+    return modelSelect ? modelSelect.value : DEFAULT_MODEL;
+}
+
 // Function to send message to Groq API
 async function sendMessageToGroq(message) {
-    // Get API key from session storage or environment
-    const apiKey = sessionStorage.getItem('groqApiKey') || (window.AppConfig && window.AppConfig.groqApiKey);
-    
-    if (!apiKey) {
-        hideLoadingIndicator();
-        addMessageToChat('ai', 'API key not found. Please reload the page and enter your Groq API key.');
-        return;
-    }
-    
     try {
+        const apiKey = getApiKey();
+        if (!apiKey) {
+            hideLoadingIndicator();
+            addMessageToChat('ai', 'API key is not set. Please click the API Key button to set your Groq API key.');
+            showApiKeyModal();
+            return;
+        }
+
+        const model = getSelectedModel();
+        
         const response = await fetch(GROQ_API_URL, {
             method: 'POST',
             headers: {
@@ -140,7 +226,7 @@ async function sendMessageToGroq(message) {
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: DEFAULT_MODEL,
+                model: model,
                 messages: chatHistory,
                 temperature: 0.7,
                 max_tokens: 1024
@@ -152,7 +238,8 @@ async function sendMessageToGroq(message) {
         if (data.error) {
             // Handle error
             hideLoadingIndicator();
-            addMessageToChat('ai', 'Sorry, I encountered an error. Please check your API key or try again later.');
+            const errorMessage = `Error: ${data.error.message || 'Unknown error'}. Please check your API key.`;
+            addMessageToChat('ai', errorMessage);
             console.error('Groq API Error:', data.error);
             return;
         }
@@ -163,6 +250,9 @@ async function sendMessageToGroq(message) {
         // Add to chat history
         chatHistory.push({ role: 'assistant', content: aiMessage });
         
+        // Save to localStorage
+        saveChatHistory();
+        
         // Limit history to prevent token limit issues
         if (chatHistory.length > 15) {
             // Keep system message and last 12 messages
@@ -170,6 +260,9 @@ async function sendMessageToGroq(message) {
                 chatHistory[0], 
                 ...chatHistory.slice(chatHistory.length - 12)
             ];
+            
+            // Update saved history
+            saveChatHistory();
         }
         
         // Hide loading and show message
@@ -178,7 +271,7 @@ async function sendMessageToGroq(message) {
         
     } catch (error) {
         hideLoadingIndicator();
-        addMessageToChat('ai', 'Sorry, I encountered a connection error. Please check your internet connection and try again.');
+        addMessageToChat('ai', 'Sorry, I encountered a connection error. Please check your internet connection and API key, then try again.');
         console.error('Error:', error);
     }
 } 

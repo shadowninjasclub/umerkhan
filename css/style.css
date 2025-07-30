@@ -376,12 +376,13 @@ img {
     height: 100vh;
     display: flex;
     align-items: center;
-    background: linear-gradient(rgba(10, 10, 10, 0.8), rgba(10, 10, 10, 0.9)), url('../img/hero-bg.jpg');
+    background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.8)), url('../img/front page.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
     position: relative;
     overflow: hidden;
+    color: var(--text-light); /* Ensure text is visible */
 }
 
 .hero::before {
@@ -391,7 +392,7 @@ img {
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle, transparent, rgba(10, 10, 10, 0.7));
+    background: radial-gradient(circle, transparent, rgba(10, 10, 10, 0.9)); /* Darker overlay */
     z-index: 1;
 }
 
@@ -525,14 +526,34 @@ img {
 
 /* Animation classes */
 .animate-hero {
-    opacity: 0;
-    transform: translateY(30px);
+    opacity: 1; /* Make text visible by default */
+    transform: translateY(0); /* No initial offset */
 }
 
 .animate-hero.active {
     opacity: 1;
     transform: translateY(0);
     transition: all 0.8s ease;
+}
+
+/* Apply animations immediately - no need to wait for JS */
+.hero-content h1,
+.hero-content h2,
+.hero-content .tagline,
+.hero-content .hero-btns,
+.hero-content .social-icons {
+    animation: fadeIn 1s forwards;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Hero Responsive */

@@ -11,7 +11,6 @@ A responsive, modern personal portfolio website for martial arts instructor Umer
 - Interactive portfolio with filtering capabilities
 - Animated skill bars and timeline
 - Contact form with validation
-- AI Chatbot powered by Groq API
 - SEO optimized structure
 - Supabase integration for data storage
 
@@ -26,7 +25,6 @@ A responsive, modern personal portfolio website for martial arts instructor Umer
 - Services offered
 - Hobbies and interests
 - Contact section with form
-- AI Assistant chatbot page
 
 ## Technologies Used
 
@@ -36,38 +34,7 @@ A responsive, modern personal portfolio website for martial arts instructor Umer
 - Font Awesome icons
 - Google Fonts
 - Web3Forms API for contact form
-- Groq API for AI chatbot
 - Supabase for database functionality
-
-## AI Chatbot Integration
-
-The website features an AI assistant powered by Groq's API:
-
-- The chatbot uses Llama3-8b-8192 model by default
-- Conversation context is maintained throughout the chat session
-- API keys are handled securely
-
-### Setting up the Chatbot (Choose one method)
-
-#### Method 1: Config File (Recommended for Development)
-
-1. Rename `js/config.sample.js` to `js/config.js` and add your Groq API key:
-```javascript
-const CONFIG = {
-    GROQ_API_KEY: "your-api-key-here",
-    GROQ_MODEL: "llama3-8b-8192",
-    MAX_TOKENS: 1024,
-    TEMPERATURE: 0.7
-};
-```
-2. The `js/config.js` file is already in `.gitignore` to prevent committing API keys to the repository
-
-#### Method 2: User Input (Recommended for Production)
-
-1. Deploy the website without including the config.js file
-2. Users will be prompted to enter their own Groq API key
-3. Keys are only stored in the browser's session storage and are never saved on servers
-4. Users need to sign up at [Groq](https://console.groq.com) and create their own API key
 
 ## Supabase Integration
 
@@ -109,5 +76,4 @@ This website uses Supabase for the following features:
 - Fonts: Google Fonts (Poppins, Cinzel)
 - Icons: Font Awesome
 - Form Processing: Web3Forms
-- Database: Supabase
-- AI Assistant: Groq API 
+- Database: Supabase 

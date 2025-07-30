@@ -6,6 +6,12 @@ const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 document.addEventListener('DOMContentLoaded', () => {
     'use strict';
     
+    // Activate hero animations immediately
+    const heroElements = document.querySelectorAll('.animate-hero');
+    heroElements.forEach(el => {
+        el.classList.add('active');
+    });
+    
     // Form submission with Supabase integration
     const contactForm = document.getElementById('contact-form');
     if (contactForm) {
